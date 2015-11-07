@@ -1,0 +1,183 @@
+<html>
+<head>
+	<title>Stroop test</title>
+	<style type="text/css">
+
+		*{
+			box-sizing: border-box;
+		}
+
+		body {
+			background-color: lightgray;
+		}
+
+		#main-content {
+			position: relative;
+			width: 100%;
+			max-width: 800px;
+			margin: auto;
+			background-color: white;	
+			border-radius: 5px;
+			text-align: center;
+			font-family: monospace;
+			padding: 25px 50px;
+		}
+
+		#title {
+			font-size: 36px;
+			text-decoration: underline;
+		}
+
+		#instructions {
+			font-size: 18px;
+			text-align: left;
+		}
+
+		button {
+			border-radius: 5px;
+			padding: 5px 10px;
+			font-family: monospace;
+			font-size: 16px;
+			cursor: pointer;
+			outline: none;
+			margin: 50px 15px;
+			text-transform: capitalize;
+		}
+
+		#active-preview {
+		    font-size: 72px;
+		    font-weight: bold;
+		    text-transform: capitalize;
+		}
+
+		#score-preview {
+			position: absolute;
+			top: 0;
+			left: 0;
+			text-align: left;
+			padding: 10px;
+		}
+
+	</style>
+
+</head>
+<body>
+	<div id="main-content">
+		<h1 id="title">The Stroop test</h1>
+		<p id="instructions">
+			In this test you will be shown a series of words in different colors. Your job is to click the button with the name of that color written on it.<br/> Do not pay attention to what the word is, <b>only the color of the word is important</b>. Try finishing the test as fast as you can.
+		</p>
+		
+		<div id="active-preview"></div>
+		<div id="score-preview"></div>
+
+		<div id="results"></div>
+
+		<div id="button-container">
+			<button id="start-button">Start</button>
+		</div>
+	</div>
+
+	<script type="text/javascript">
+		var buttonContainer = document.getElementById("button-container");
+		var startButton = document.getElementById("start-button");
+		var instructions = document.getElementById("instructions");
+		var activePreview = document.getElementById("active-preview");
+		var results = document.getElementById("results");
+		var scorePreview = document.getElementById("score-preview");
+
+		var colors = ["black","red","blue","green","yellow"];
+		var currColor = "";
+		var currText = "";
+		var correctAnswerCount = 0;
+		var answerCount = 0;
+		var totalNumOfQuestions = 15;
+		var currResponseTime = 0;
+		var mainInterval;
+
+		startButton.addEventListener("click",start)
+
+		function start() {
+			buttonContainer.removeChild(startButton);
+			instructions.innerHTML = "";
+
+			for (var i = 0; i < colors.length; i++) {
+				generateButton(colors[i]);
+			};
+
+			reset();
+		}
+
+		function generateButton(name) {
+			var button = document.createElement("button");
+			button.setAttribute("id",name);
+			button.innerHTML = name;
+			button.addEventListener("click",colorSelected);
+			buttonContainer.appendChild(button);
+		}
+
+		function reset () {
+			var colorIdx = Math.floor(Math.random()*colors.length - 0.0001); 
+			var textIdx = Math.floor(Math.random()*colors.length - 0.0001);  
+
+			while(colors[colorIdx] == currColor && colors[textIdx] == currText) {
+				colorIdx = Math.floor(Math.random()*colors.length - 0.0001); 
+				textIdx = Math.floor(Math.random()*colors.length - 0.0001);  
+			}
+
+			currColor = colors[colorIdx];
+			currText = colors[textIdx];
+
+			activePreview.innerHTML = currText;
+			activePreview.setAttribute("style","color: " + currColor);
+
+			clearInterval(mainInterval);
+			mainInterval = setInterval(tick,10);
+		}
+
+		function tick () {
+			currResponseTime += 10;
+			scorePreview.innerHTML = "Time: " + (currResponseTime / 1000) + "<br/>" + "Progress: " + answerCount + " / " + totalNumOfQuestions;
+
+		}
+
+		function colorSelected() {
+			var selectedValue = this.innerHTML;
+
+			answerCount += 1;
+
+			if(selectedValue == currColor) {
+				correctAnswerCount += 1;
+			}
+
+			if(totalNumOfQuestions == answerCount) {
+				end();
+				return;
+			}
+			reset();
+		}
+
+		function end() {
+			buttonContainer.innerHTML = "";
+			activePreview.innerHTML = "";
+			scorePreview.innerHTML = "";
+
+			results.innerHTML = "Nice job!<br/><br/>" + score() + "<br/>Thank you for participating :) ";
+		}
+
+		function score() {
+			
+			clearInterval(mainInterval);
+			var totalTime = currResponseTime;
+
+			var average = totalTime / (totalNumOfQuestions);
+			average = average.toFixed(2);
+
+			var score = "You answered " + correctAnswerCount + " / " + totalNumOfQuestions + " correctly<br/>";
+			score += "Average response time: " + average + "<br/>";
+			score += "Total time: " + totalTime + "<br/>";
+			return score;
+		}
+	</script>
+</body>
+</html>
