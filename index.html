@@ -20,7 +20,7 @@
 			border-radius: 5px;
 			text-align: center;
 			font-family: monospace;
-			padding: 25px 50px;
+			padding: 25px 50px 50px 50px;
 		}
 
 		#title {
@@ -92,8 +92,10 @@
 		var correctAnswerCount = 0;
 		var answerCount = 0;
 		var totalNumOfQuestions = 15;
+		var totalTime = 0;
 		var currResponseTime = 0;
 		var mainInterval;
+		var responseList = [];
 
 		startButton.addEventListener("click",start)
 
@@ -127,6 +129,7 @@
 
 			currColor = colors[colorIdx];
 			currText = colors[textIdx];
+			currResponseTime = 0;
 
 			activePreview.innerHTML = currText;
 			activePreview.setAttribute("style","color: " + currColor);
@@ -137,12 +140,15 @@
 
 		function tick () {
 			currResponseTime += 10;
-			scorePreview.innerHTML = "Time: " + (currResponseTime / 1000) + "<br/>" + "Progress: " + answerCount + " / " + totalNumOfQuestions;
+			totalTime += 10;
+			scorePreview.innerHTML = "Time: " + (totalTime / 1000) + "<br/>" + "Progress: " + answerCount + " / " + totalNumOfQuestions;
 
 		}
 
 		function colorSelected() {
 			var selectedValue = this.innerHTML;
+
+			responseList.push(new Response(currColor,currText,selectedValue,currResponseTime));
 
 			answerCount += 1;
 
@@ -158,26 +164,75 @@
 		}
 
 		function end() {
+			clearInterval(mainInterval);
+
 			buttonContainer.innerHTML = "";
 			activePreview.innerHTML = "";
 			scorePreview.innerHTML = "";
 
 			results.innerHTML = "Nice job!<br/><br/>" + score() + "<br/>Thank you for participating :) ";
+
+			download("results.txt",generateResults());
 		}
 
 		function score() {
 			
-			clearInterval(mainInterval);
-			var totalTime = currResponseTime;
+			var average = ((totalTime / totalNumOfQuestions) / 1000).toFixed(2);
+			var time = (totalTime / 1000).toFixed(2);
 
-			var average = totalTime / (totalNumOfQuestions);
-			average = average.toFixed(2);
-
-			var score = "You answered " + correctAnswerCount + " / " + totalNumOfQuestions + " correctly<br/>";
-			score += "Average response time: " + average + "<br/>";
-			score += "Total time: " + totalTime + "<br/>";
+			var score = "You answered <b>" + correctAnswerCount + " / " + totalNumOfQuestions + "</b> correctly<br/>";
+			score += "Average response time: <b>" + average + "</b> seconds.<br/>";
+			score += "Total time: <b>" + time + "</b> seconds.<br/>";
 			return score;
 		}
+
+		function generateResults() {
+			var response = "";
+			
+			var currentTime = new Date();
+			var timeOfDay = currentTime.getHours() + ":" + currentTime.getMinutes() + ":" + currentTime.getSeconds();
+			var averageTime = ((totalTime / totalNumOfQuestions) / 1000).toFixed(2);
+			var time = (totalTime / 1000).toFixed(2);
+			var score = ((correctAnswerCount / totalNumOfQuestions) * 100).toFixed(2);
+
+			// summury
+			response += "CorrectAnswers,TotalAnswers,ScorePercent,AverageTime,TotalTime,TimeOfDay\n";
+			response += correctAnswerCount + "," + totalNumOfQuestions + "," + score + "," + averageTime + "," + time + "," + timeOfDay + "\n";
+
+			//responseList
+			response += "ShownColor,ShownText,Answer,ResponseTime\n";
+
+			for (var i = 0; i < responseList.length; i++) {
+				response += responseList[i].toString();
+			};
+
+			return response;
+		}
+
+		function download(filename, text) {
+			var element = document.createElement('a');
+			element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+			element.setAttribute('download', filename);
+
+			element.style.display = 'none';
+			document.body.appendChild(element);
+
+			element.click();
+
+			document.body.removeChild(element);
+		}
+
+		function Response(shownColor, shownText, answer,responseTime) {
+			this.shownColor = shownColor;
+			this.shownText = shownText;
+			this.answer = answer;
+			this.responseTime = responseTime;
+		}
+
+		Response.prototype.toString = function() {
+			return this.shownColor + "," + this.shownText + "," + this.answer + "," + this.responseTime + "\n";
+		};
+
 	</script>
 </body>
 </html>
