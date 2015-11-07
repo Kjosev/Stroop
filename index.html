@@ -16,7 +16,8 @@
 			width: 100%;
 			max-width: 800px;
 			margin: auto;
-			background-color: white;	
+			background-color: white;
+			border: 5px solid gray;
 			border-radius: 5px;
 			text-align: center;
 			font-family: monospace;
@@ -122,7 +123,7 @@
 			var colorIdx = Math.floor(Math.random()*colors.length - 0.0001); 
 			var textIdx = Math.floor(Math.random()*colors.length - 0.0001);  
 
-			while(colors[colorIdx] == currColor && colors[textIdx] == currText) {
+			while(colors[colorIdx] == currColor || colors[textIdx] == currText) {
 				colorIdx = Math.floor(Math.random()*colors.length - 0.0001); 
 				textIdx = Math.floor(Math.random()*colors.length - 0.0001);  
 			}
