@@ -1,6 +1,7 @@
 <html>
 <head>
 	<title>Stroop test</title>
+	<meta name="viewport" content="width=device-width">
 	<style type="text/css">
 
 		*{
@@ -60,6 +61,8 @@
 		}
 
 	</style>
+	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+  	<script type="text/javascript" src="http://www.parsecdn.com/js/parse-latest.js"></script>
 
 </head>
 <body>
@@ -173,7 +176,13 @@
 
 			results.innerHTML = "Nice job!<br/><br/>" + score() + "<br/>Thank you for participating :) ";
 
-			download("results.txt",generateResults());
+			// download("results.txt",generateResults());
+			try {
+				saveToParse();
+			} catch(err) {
+				alert("Something is wrong with your internet so please send this file to the examiner. Thank you.");
+				download("results.txt",generateResults());
+			}
 		}
 
 		function score() {
@@ -185,6 +194,42 @@
 			score += "Average response time: <b>" + average + "</b> seconds.<br/>";
 			score += "Total time: <b>" + time + "</b> seconds.<br/>";
 			return score;
+		}
+
+
+		function saveToParse() {
+			
+			var score = (correctAnswerCount / totalNumOfQuestions) * 100;
+			var averageTime = totalTime / totalNumOfQuestions;
+			var currentTime = new Date();
+
+			Parse.initialize("jZAr47MQV1lx4dpUFvPQSTUrfl1wzQ5O9NZ4LNc0", "eLVy1A76OPs3Yj1r5bRh1teeOVmR5Cs32mBQw42E");
+
+			var Result = Parse.Object.extend("Result");
+			var result = new Result();
+			result.save({
+				CorrectAnswers: correctAnswerCount,
+				TotalAnswers: totalNumOfQuestions,
+				ScorePercent: score,
+				AverageTime: averageTime,
+				TotalTime: totalTime,
+				TimeOfDay: currentTime
+			}).then(function(object) {
+				for (var i = 0; i < responseList.length; i++) {
+					var Response = Parse.Object.extend("Response");
+					var response = new Response();
+					response.save({
+						ShownColor: responseList[i].shownColor,
+						ShownText: responseList[i].shownText,
+						Answer: responseList[i].answer,
+						ResponseTime: responseList[i].responseTime,
+						ResultId: result.id
+					})
+				};
+			}).fail(function() {
+				alert("Something is wrong with your internet so please send this file to the examiner. Thank you.");
+				download("results.txt",generateResults());
+			});
 		}
 
 		function generateResults() {
